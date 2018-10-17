@@ -478,6 +478,8 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset,
     struct fuse_file_info *fi) {
     const char *path_clean = path++;
     if (strcmp(path_clean, "\n"))
+        
+    /** Aqui va lo que te copiarán como no pongas este repo en privado xd (TODO) *****/
 }
 
 
