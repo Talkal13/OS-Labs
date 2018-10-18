@@ -476,16 +476,34 @@ static int my_truncate(const char *path, off_t size)
 
 static int my_read(const char *path, char *buf, size_t size, off_t offset,
     struct fuse_file_info *fi) {
-    const char *path_clean = path++;
-    if (strcmp(path_clean, "\n"))
+    return -ENOSYS;
 }
+
+static int my_unlink(const char *pathname) {
+    char t[strlen(pathname)];
+    strcpy(t, pathname);
+    int index;
+    if ((index = findFileByName(&myFileSystem, t + 1)) == -1 ) {
+      return -ENOENT;
+    }
+    FileStruct file = myFileSystem.directory.files[index];
+
+    myFileSystem.nodes[file.nodeIdx]->freeNode = true;
+    //inode.freeNode = true;
+
+    fprintf(stderr, "--->>>my_unlink: path %s, flags\n", t+1);
+
+
+    return -ENOSYS;
+}
+
 
 
 struct fuse_operations myFS_operations = {
     .getattr	= my_getattr,					// Obtain attributes from a file
     .readdir	= my_readdir,					// Read directory entries
-    .truncate	= my_truncate,					// Modify the size of a file
-    .open		= my_open,						// Oeen a file
+    .truncate	= my_truncate,				// Modify the size of a file
+    .open		= my_open,						  // Open a file
     .write		= my_write,						// Write data into a file already opened
     .release	= my_release,					// Close an opened file
     .mknod		= my_mknod,						// Create a new file
