@@ -486,15 +486,44 @@ static int my_unlink(const char *pathname) {
     if ((index = findFileByName(&myFileSystem, t + 1)) == -1 ) {
       return -ENOENT;
     }
-    FileStruct file = myFileSystem.directory.files[index];
 
-    myFileSystem.nodes[file.nodeIdx]->freeNode = true;
+
+    FileStruct *file = &myFileSystem.directory.files[index];
+    NodeStruct *node = (myFileSystem.nodes[file->nodeIdx]);
+    int inodeIdx = file->nodeIdx;
+fprintf(stderr, "--->>>my_unlink: path %s, flags 0\n", t+1);
+    // Free up the block on the i-node
+    for (int i = 0; i < node->numBlocks; ++i) {
+        myFileSystem.bitMap[node->blocks[i]] = 0;
+        myFileSystem.superBlock.numOfFreeBlocks++;
+    }
+
+fprintf(stderr, "--->>>my_unlink: path %s, flags 1\n", t+1);
+    updateBitmap(&myFileSystem);
+    updateSuperBlock(&myFileSystem);
+fprintf(stderr, "--->>>my_unlink: path %s, flags 2\n", t+1);
+    // Free file Directory
+    file->freeFile = true;
+    myFileSystem.directory.numFiles--;
+    updateDirectory(&myFileSystem);
+
+
+    fprintf(stderr, "--->>>my_unlink: path %s, flags 3\n", t+1);
+    node->freeNode = true;
+    myFileSystem.numFreeNodes++;
+    updateNode(&myFileSystem, inodeIdx, node);
+    myFileSystem.nodes[inodeIdx] = NULL;
+
     //inode.freeNode = true;
 
-    fprintf(stderr, "--->>>my_unlink: path %s, flags\n", t+1);
+    fprintf(stderr, "--->>>my_unlink: path %s, flags 4\n", t+1);
+
+    sync();
 
 
-    return -ENOSYS;
+
+
+    return 0;
 }
 
 
@@ -503,7 +532,7 @@ struct fuse_operations myFS_operations = {
     .getattr	= my_getattr,					// Obtain attributes from a file
     .readdir	= my_readdir,					// Read directory entries
     .truncate	= my_truncate,				// Modify the size of a file
-    .open		= my_open,						  // Open a file
+    .open		  = my_open,						  // Open a file
     .write		= my_write,						// Write data into a file already opened
     .release	= my_release,					// Close an opened file
     .mknod		= my_mknod,						// Create a new file
