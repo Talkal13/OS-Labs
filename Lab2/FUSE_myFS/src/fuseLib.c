@@ -491,24 +491,22 @@ static int my_unlink(const char *pathname) {
     FileStruct *file = &myFileSystem.directory.files[index];
     NodeStruct *node = (myFileSystem.nodes[file->nodeIdx]);
     int inodeIdx = file->nodeIdx;
-fprintf(stderr, "--->>>my_unlink: path %s, flags 0\n", t+1);
+
     // Free up the block on the i-node
     for (int i = 0; i < node->numBlocks; ++i) {
         myFileSystem.bitMap[node->blocks[i]] = 0;
         myFileSystem.superBlock.numOfFreeBlocks++;
     }
 
-fprintf(stderr, "--->>>my_unlink: path %s, flags 1\n", t+1);
+
     updateBitmap(&myFileSystem);
     updateSuperBlock(&myFileSystem);
-fprintf(stderr, "--->>>my_unlink: path %s, flags 2\n", t+1);
+
     // Free file Directory
     file->freeFile = true;
     myFileSystem.directory.numFiles--;
     updateDirectory(&myFileSystem);
 
-
-    fprintf(stderr, "--->>>my_unlink: path %s, flags 3\n", t+1);
     node->freeNode = true;
     myFileSystem.numFreeNodes++;
     updateNode(&myFileSystem, inodeIdx, node);
@@ -516,9 +514,9 @@ fprintf(stderr, "--->>>my_unlink: path %s, flags 2\n", t+1);
 
     //inode.freeNode = true;
 
-    fprintf(stderr, "--->>>my_unlink: path %s, flags 4\n", t+1);
+    fprintf(stderr, "--->>>my_unlink: path %s, flags\n", t+1);
 
-    sync();
+    //sync();
 
 
 
