@@ -477,12 +477,12 @@ static int my_truncate(const char *path, off_t size)
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 
     char buffer[BLOCK_SIZE_BYTES];
-    int bytes2Write = size, totalWrite = 0;
+    int bytes2Read = size, totalRead = 0;
 
 
     NodeStruct *node = (myFileSystem.nodes[fi->fh]);
     // Write data
-    while(bytes2Write) {
+    while(bytes2Read) {
         int i;
         int currentBlock, offBlock;
         currentBlock = node->blocks[offset / BLOCK_SIZE_BYTES];
@@ -493,33 +493,37 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
             return -EIO;
         }
 
-        for(i = offBlock; (i < BLOCK_SIZE_BYTES) && (totalWrite < size); i++) {
-            buffer[i] = buf[totalWrite++];
+
+
+        for(i = offBlock; (i < BLOCK_SIZE_BYTES) && (totalRead < size); i++) {
+            if (node->fileSize == offset + i) {
+                return 0;
+            }
+            buf[totalRead++] = buffer[i];
         }
 
-        if( writeBlock(&myFileSystem, currentBlock, &buffer)==-1 ) {
-            fprintf(stderr,"Error writing block in my_write\n");
-            return -EIO;
-        }
+
+
 
         // Discount the written stuff
-        bytes2Write -= (i - offBlock);
+        bytes2Read -= (i - offBlock);
         offset += (i - offBlock);
+
+
     }
     sync();
-
-    node->modificationTime = time(NULL);
+    
     updateSuperBlock(&myFileSystem);
     updateBitmap(&myFileSystem);
     updateNode(&myFileSystem, fi->fh, node);
 
-    return size;
+    return totalRead;
 }
 
 static int my_unlink(const char *pathname) {
 
     int index;
-    if ((index = findFileByName(&myFileSystem, pathname + 1)) == -1 ) {
+    if ((index = findFileByName(&myFileSystem,  pathname + 1)) == -1 ) {
       return -ENOENT;
     }
 
@@ -550,7 +554,7 @@ static int my_unlink(const char *pathname) {
 
     //inode.freeNode = true;
 
-    fprintf(stderr, "--->>>my_unlink: path %s, flags\n", t+1);
+    fprintf(stderr, "--->>>my_unlink: path %s, flags\n", pathname+1);
 
     //sync();
 
