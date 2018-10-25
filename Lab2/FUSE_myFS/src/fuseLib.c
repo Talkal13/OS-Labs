@@ -474,16 +474,52 @@ static int my_truncate(const char *path, off_t size)
     return 0;
 }
 
-static int my_read(const char *path, char *buf, size_t size, off_t offset,
-    struct fuse_file_info *fi) {
-    return -ENOSYS;
+static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+
+    char buffer[BLOCK_SIZE_BYTES];
+    int bytes2Write = size, totalWrite = 0;
+
+
+    NodeStruct *node = (myFileSystem.nodes[fi->fh]);
+    // Write data
+    while(bytes2Write) {
+        int i;
+        int currentBlock, offBlock;
+        currentBlock = node->blocks[offset / BLOCK_SIZE_BYTES];
+        offBlock = offset % BLOCK_SIZE_BYTES;
+
+        if( readBlock(&myFileSystem, currentBlock, &buffer)==-1 ) {
+            fprintf(stderr,"Error reading blocks in my_write\n");
+            return -EIO;
+        }
+
+        for(i = offBlock; (i < BLOCK_SIZE_BYTES) && (totalWrite < size); i++) {
+            buffer[i] = buf[totalWrite++];
+        }
+
+        if( writeBlock(&myFileSystem, currentBlock, &buffer)==-1 ) {
+            fprintf(stderr,"Error writing block in my_write\n");
+            return -EIO;
+        }
+
+        // Discount the written stuff
+        bytes2Write -= (i - offBlock);
+        offset += (i - offBlock);
+    }
+    sync();
+
+    node->modificationTime = time(NULL);
+    updateSuperBlock(&myFileSystem);
+    updateBitmap(&myFileSystem);
+    updateNode(&myFileSystem, fi->fh, node);
+
+    return size;
 }
 
 static int my_unlink(const char *pathname) {
-    char t[strlen(pathname)];
-    strcpy(t, pathname);
+
     int index;
-    if ((index = findFileByName(&myFileSystem, t + 1)) == -1 ) {
+    if ((index = findFileByName(&myFileSystem, pathname + 1)) == -1 ) {
       return -ENOENT;
     }
 
