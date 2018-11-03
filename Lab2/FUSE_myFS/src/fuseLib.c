@@ -481,6 +481,7 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 
 
     NodeStruct *node = (myFileSystem.nodes[fi->fh]);
+
     // Read data
     while(bytes2Read) {
         int i;
@@ -502,25 +503,11 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
             buf[totalRead++] = buffer[i];
         }
         
-        /*
-            Fill the buffer with \000 in case of eof
-        */
-        for (int j = totalRead; j < size; j++) {
-            buf[j] = '\000';
-        }
-
 
         // Discount the read stuff
         bytes2Read -= (i - offBlock);
         offset += (i - offBlock);
-
-
     }
-    //sync();
-    
-    //updateSuperBlock(&myFileSystem);
-    //updateBitmap(&myFileSystem);
-    //updateNode(&myFileSystem, fi->fh, node);
 
     return totalRead;
 }
