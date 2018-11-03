@@ -1,0 +1,25 @@
+#!/bin/bash
+
+MPOINT="./mount-point"
+
+rm -R -f test
+mkdir test
+
+//1
+
+echo ./src/fuseLib.c > ./test/filea.txt
+cp ./test/filea.txt $MPOINT/
+//echo ./src/fuseLib.c > ./temp/filea.txt
+echo ./src/myFS.h > ./test/fileb.txt
+cp ./test/fileb.txt $MPOINT/
+//echo ./src/myFS.h > ./temp/fileb.txt
+
+//2
+
+//my-fsck 
+diff fuseLib.c filea.txt
+diff myFS.h fileb.txt
+
+//3
+
+ 
