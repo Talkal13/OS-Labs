@@ -478,10 +478,11 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 
     char buffer[BLOCK_SIZE_BYTES];
     int bytes2Read = size, totalRead = 0;
+    BOOLEAN eof = false;
 
 
     NodeStruct *node = (myFileSystem.nodes[fi->fh]);
-    // Write data
+    // Read data
     while(bytes2Read) {
         int i;
         int currentBlock, offBlock;
@@ -495,17 +496,16 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 
 
 
-        for(i = offBlock; (i < BLOCK_SIZE_BYTES) && (totalRead < size); i++) {
-            if (node->fileSize == offset + i) {
-                return 0;
-            }
+        for(i = offBlock; (i < BLOCK_SIZE_BYTES) && (totalRead < size) && !eof; i++) {
             buf[totalRead++] = buffer[i];
         }
 
+        for (int j = totalRead; j < size; j++) {
+            buf[j] = '\000';
+        }
 
 
-
-        // Discount the written stuff
+        // Discount the read stuff
         bytes2Read -= (i - offBlock);
         offset += (i - offBlock);
 
@@ -523,7 +523,7 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 static int my_unlink(const char *pathname) {
 
     int index;
-    if ((index = findFileByName(&myFileSystem,  pathname + 1)) == -1 ) {
+    if ((index = findFileByName(&myFileSystem,  (char *) pathname + 1)) == -1 ) {
       return -ENOENT;
     }
 
