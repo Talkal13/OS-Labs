@@ -478,7 +478,6 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 
     char buffer[BLOCK_SIZE_BYTES];
     int bytes2Read = size, totalRead = 0;
-    BOOLEAN eof = false;
 
 
     NodeStruct *node = (myFileSystem.nodes[fi->fh]);
@@ -496,10 +495,16 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 
 
 
-        for(i = offBlock; (i < BLOCK_SIZE_BYTES) && (totalRead < size) && !eof; i++) {
+        for(i = offBlock; (i < BLOCK_SIZE_BYTES) && (totalRead < size); i++) {
+            if (node->fileSize == offset + i) {
+                break; //eof
+            }
             buf[totalRead++] = buffer[i];
         }
-
+        
+        /*
+            Fill the buffer with \000 in case of eof
+        */
         for (int j = totalRead; j < size; j++) {
             buf[j] = '\000';
         }
@@ -511,11 +516,11 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 
 
     }
-    sync();
+    //sync();
     
-    updateSuperBlock(&myFileSystem);
-    updateBitmap(&myFileSystem);
-    updateNode(&myFileSystem, fi->fh, node);
+    //updateSuperBlock(&myFileSystem);
+    //updateBitmap(&myFileSystem);
+    //updateNode(&myFileSystem, fi->fh, node);
 
     return totalRead;
 }
