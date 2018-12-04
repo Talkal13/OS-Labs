@@ -46,10 +46,8 @@ static void enqueue_task_prio(task_t* t,runqueue_t* rq, int preempted)
 
 static task_t* steal_task_prio(runqueue_t* rq)
 {
-	task_t* t=tail_slist(&rq->tasks);
-
-	if (t)
-		remove_slist(&rq->tasks,t);
+	task_t* t= pick_next_task_prio(rq); // instead of the last task in the rq queue
+								//select the lowest priority task found
 
 	return t;
 }
