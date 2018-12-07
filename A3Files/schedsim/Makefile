@@ -8,7 +8,7 @@ HEADERS=$(wildcard $(MY_INCLUDES)/*.h)
 OS=$(shell uname)
 LDFLAGS=-lpthread
 #CFLAGS=-g -Wall
-CFLAGS=-g -Wall
+CFLAGS=-g -Wall -DSEM_BARRIER
 
 all: $(TARGET)
 

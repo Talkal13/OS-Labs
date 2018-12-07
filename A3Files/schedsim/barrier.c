@@ -2,23 +2,44 @@
 #include <errno.h>
 
 
-#ifdef POSIX_BARRIER
+#ifdef SEM_BARRIER
 
 /* Wrapper functions to use pthread barriers */
 
-int sys_barrier_init(sys_barrier_t* barrier, unsigned int nthreads)
+int sys_barrier_init(sys_barrier_t* barrier, unsigned int nr_threads)
 {
-	return pthread_barrier_init(barrier,NULL,nthreads);
+	sem_init(&barrier->mtx, 0, 1);
+	sem_init(&barrier->queue, 0, 0);
+	barrier->max_threads = nr_threads;
+	barrier->nr_threads_arrived = 0;
+	return 0;
 }
 
 int sys_barrier_destroy(sys_barrier_t* barrier)
 {
-	return pthread_barrier_destroy(barrier);
+	sem_destroy(&barrier->mtx);
+	sem_destroy(&barrier->queue);
+	return 0;
 }
 
 int sys_barrier_wait(sys_barrier_t *barrier)
 {
-	return pthread_barrier_wait(barrier);
+	sem_wait(&barrier->mtx);
+	barrier->nr_threads_arrived++;
+	sem_post(&barrier->mtx);
+	if (barrier->nr_threads_arrived != barrier->max_threads) {
+		
+		sem_wait(&barrier->queue);
+	}
+	else {
+		sem_wait(&barrier->mtx);
+		barrier->nr_threads_arrived = 0;
+		sem_post(&barrier->mtx);
+		sem_post(&barrier->queue);
+	}
+	if (barrier->nr_threads_arrived == 0)
+		sem_post(&barrier->queue);
+	return 0;
 }
 
 #else

@@ -1,8 +1,0 @@
-(t0): idle running
-(t1): New task P2
-(t0): Context switch (idle)<->(P2)
-(t1): P2 running
-(t2): P2 running
-(t2): Context switch (P2)<->(idle)
-==================
-P2	1	3	running

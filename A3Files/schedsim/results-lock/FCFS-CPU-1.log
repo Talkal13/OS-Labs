@@ -15,10 +15,6 @@
 (t7): idle running
 (t8): idle running
 (t9): idle running
-(t10): idle running
-(t11): idle running
-(t12): idle running
-(t13): idle running
 ==================
 P2	1	4	running
 P2	4	5	I/O

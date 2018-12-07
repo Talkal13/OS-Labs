@@ -1,15 +1,24 @@
 #ifndef  BARRIER_H
 #define  BARRIER_H
-#include <pthread.h>
+#include <semaphore.h>
+
 
 #if defined(__APPLE__) && defined(__MACH__)
 #undef POSIX_BARRIER    /* MAC OS X does not implement pthread's barriers so use custom implementation instead */
 #endif
 
-#ifdef POSIX_BARRIER
-typedef pthread_barrier_t sys_barrier_t;
+#ifdef SEM_BARRIER
+
+typedef struct {
+	sem_t mtx;		/* Barrier lock */
+	sem_t queue;		/* Condition variable where threads remain blocked */
+	int nr_threads_arrived;		/* Number of threads that reached the barrier. */
+	int max_threads;			/* Number of threads that rely on the synchronization barrier
+    							   (This value is set up upon barrier creation, and must not be modified afterwards) */
+} sys_barrier_t;
 
 #else
+#include <pthread.h>
 /* Synchronization barrier */
 typedef struct {
 	pthread_mutex_t mutex;		/* Barrier lock */
