@@ -4,7 +4,5 @@
 (t1): P2 running
 (t2): P2 running
 (t2): Context switch (P2)<->(idle)
-(t3): idle running
-(t4): idle running
 ==================
 P2	1	3	running
