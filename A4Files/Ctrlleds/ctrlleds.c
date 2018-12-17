@@ -198,7 +198,9 @@ static ssize_t device_read(struct file *filp,	/* see include/linux/fs.h   */
 static ssize_t
 device_write(struct file *filp, const char *buff, size_t len, loff_t * off)
 {
+    /*Creates the mask from the user input (?)*/
     kbd_driver= get_kbd_driver_handler();
+    /*Change the leds acording to the input*/	
     set_leds(kbd_driver,ALL_LEDS_ON);
     return 0;
 }
